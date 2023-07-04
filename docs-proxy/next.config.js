@@ -3,8 +3,8 @@ const nextConfig = {
     async rewrites() {
         return [
           {
-            source: '/cedalio',
-            destination: 'https://docs.cedalio.com',
+            source: '/:slug*',
+            destination: 'https://docs.cedalio.com/:slug*',
           },
         ]
       },
