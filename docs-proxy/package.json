@@ -1,5 +1,5 @@
 {
-  "name": "nextjs",
+  "name": "docs-proxy",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,5 +14,9 @@
     "next": "13.4.8",
     "react": "18.2.0",
     "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.3",
+    "@types/react": "^18.2.14"
   }
 }
