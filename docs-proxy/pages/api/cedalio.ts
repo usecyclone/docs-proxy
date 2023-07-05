@@ -9,7 +9,7 @@ function addCycloneScripts(respText: string): string {
   // scrollScript
   const scrollScript = doc.window.document.createElement("script");
   scrollScript.type = "text/javascript";
-  scrollScript.src = "https://convex.usecyclone.dev/cyclone.js";
+  scrollScript.src = "https://embed.static.usecyclone.dev/cyclone.js";
   head.appendChild(scrollScript);
 
   // call cyclone_load_ide
