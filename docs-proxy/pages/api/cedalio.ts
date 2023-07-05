@@ -15,7 +15,7 @@ function addCycloneScripts(respText: string): string {
   // call cyclone_load_ide
   const ideScript = doc.window.document.createElement("script");
   const ideScriptText = doc.window.document.createTextNode(
-    "window.onload=function(){window.cyclone_load_ide()};"
+    "window.onload=function(){window.cyclone_load_ide(\"cedalio\")};"
   );
   ideScript.appendChild(ideScriptText);
   head.appendChild(ideScript);
