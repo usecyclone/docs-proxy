@@ -9,13 +9,13 @@ function addCycloneScripts(respText: string): string {
   // scrollScript
   const scrollScript = doc.window.document.createElement("script");
   scrollScript.type = "text/javascript";
-  scrollScript.src = "https://embed.static.usecyclone.dev/cyclone.js";
+  scrollScript.src = "https://convex.usecyclone.dev/cyclone.js";
   head.appendChild(scrollScript);
 
   // call cyclone_load_ide
   const ideScript = doc.window.document.createElement("script");
   const ideScriptText = doc.window.document.createTextNode(
-    "window.onload=function(){window.cyclone_load_ide(\"cedalio\")};"
+    'window.onload=function(){window.cyclone_load_ide("cedalio")};'
   );
   ideScript.appendChild(ideScriptText);
   head.appendChild(ideScript);
@@ -27,6 +27,24 @@ function addCycloneScripts(respText: string): string {
   posthog.init("phc_fV15A0YJ30ayiUaZZolVIt203gPpsdl2AzU7npwCHTt",{session_recording:{recordCrossOriginIframes:true},api_host:"https://d1qzqtzwsjrts5.cloudfront.net"});`);
   posthogScript.appendChild(posthogScriptText);
   head.appendChild(posthogScript);
+
+  // allow CSS to be edited by cyclone scripts
+  const cssLinks = doc.window.document.querySelectorAll("link[rel=stylesheet]");
+  for (let i = 0; i < cssLinks.length; i++) {
+    const cssLink = cssLinks[i] as HTMLLinkElement;
+
+    if (cssLink.crossOrigin?.length == 0) {
+      cssLink.crossOrigin = "anonymous";
+    }
+  }
+
+  // attempt to put the top level children of body in a div
+  const body = doc.window.document.body;
+  const topLevelDomString = body.innerHTML;
+  const topLevelDom = doc.window.document.createElement("div");
+  topLevelDom.id = "cyclone-ide-wrapped";
+  topLevelDom.innerHTML = topLevelDomString;
+  body.innerHTML = topLevelDom.outerHTML;
 
   return doc.window.document.documentElement.outerHTML;
 }
