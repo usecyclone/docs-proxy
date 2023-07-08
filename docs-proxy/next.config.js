@@ -4,11 +4,11 @@ const nextConfig = {
     return [
       {
         source: "/",
-        destination: "/api/cedalio",
+        destination: "/api/proxy",
       },
       {
         source: "/:slug*",
-        destination: "/api/cedalio",
+        destination: "/api/proxy",
       },
     ];
   },
