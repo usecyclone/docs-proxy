@@ -6,6 +6,8 @@ import axios from "axios";
 import proxyHosts from "../../lib/proxyConfig";
 import { addCycloneScripts } from "../../lib/addScript";
 
+import { get } from "@vercel/edge-config";
+
 const defaultProxyHost = "https://docs.convex.dev";
 
 async function streamToString(stream: any) {
@@ -20,6 +22,14 @@ async function streamToString(stream: any) {
 }
 
 async function handler(request: NextApiRequest, response: NextApiResponse) {
+  let edgeProxySettings = proxyHosts;
+
+  try {
+    edgeProxySettings = (await get("production")) || proxyHosts;
+  } catch (err) {
+    console.log(err);
+  }
+
   const headers: any = {};
 
   let key = undefined;
@@ -36,13 +46,11 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
 
   let proxyDestUrl: string = defaultProxyHost;
   const originalHost = headers.host as string | undefined;
-  if (originalHost && proxyHosts[originalHost]) {
-    proxyDestUrl = proxyHosts[originalHost];
+  if (originalHost && edgeProxySettings[originalHost]) {
+    proxyDestUrl = edgeProxySettings[originalHost];
   }
 
   headers.host = new URL(proxyDestUrl).host;
-
-  console.log(proxyDestUrl + request.url);
 
   const resp = await axios
     .request({

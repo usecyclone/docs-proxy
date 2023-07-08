@@ -1,3 +1,5 @@
+// the main site should use Vercel Edge Config
+// this is used for fallback
 export const proxyHosts: { [host: string]: string } = {
   "docs.cedalio.com": "https://github.cedalio.com",
   "cedalio.usecyclone.dev": "https://docs.cedalio.com",
