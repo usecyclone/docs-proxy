@@ -4,7 +4,7 @@ import StreamPromises from "stream/promises";
 import axios from "axios";
 
 const proxyHosts: { [host: string]: string } = {
-  "docs.cedalio.com": "https://docs.cedalio.com",
+  "docs.cedalio.com": "https://github.cedalio.com",
   "cedalio.usecyclone.dev": "https://docs.cedalio.com",
   "convex.usecyclone.dev": "https://docs.convex.dev",
   "continue.usecyclone.dev": "https://continue.dev",
