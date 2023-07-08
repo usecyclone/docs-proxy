@@ -112,7 +112,9 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
   for (const headerName in resp.headers) {
     if (
       resp.headers.hasOwnProperty(headerName) &&
-      headerName.toLowerCase() !== "content-length"
+      headerName.toLowerCase() !== "content-length" &&
+      // remove the CSP policy headers. Example platforms: gitbook
+      headerName.toLowerCase() !== "content-security-policy"
     ) {
       const headerValue = resp.headers[headerName];
       response.setHeader(headerName, headerValue);
