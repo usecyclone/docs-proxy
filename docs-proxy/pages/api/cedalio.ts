@@ -7,10 +7,10 @@ const proxyHosts: { [host: string]: string } = {
   "docs.cedalio.com": "https://docs.cedalio.com",
   "cedalio.usecyclone.dev": "https://docs.cedalio.com",
   "convex.usecyclone.dev": "https://docs.convex.dev",
-  "continue.usecyclone.dev": "https://continue.dev/docs",
+  "continue.usecyclone.dev": "https://continue.dev",
 };
 
-const defaultProxyHost = "https://continue.dev";
+const defaultProxyHost = "https://docs.convex.dev";
 
 async function streamToString(stream: any) {
   // lets have a ReadableStream as a stream variable
@@ -120,8 +120,11 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
 
   if (
     resp.status === 200 &&
-    (resp.headers["Content-Type"] as string | null)?.includes("text/html")
+    (resp.headers["content-type"] as string | null)?.includes("text/html")
   ) {
+    // response.send will set the content-length header
+    // that conflicts with the transfer-encoding one
+    response.removeHeader("transfer-encoding");
     response.send(addCycloneScripts(await streamToString(resp.data)));
   } else {
     await StreamPromises.pipeline(resp.data, response).catch((err) => {
