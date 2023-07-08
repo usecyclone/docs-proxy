@@ -1,5 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { JSDOM } from "jsdom";
+import { Readable } from "stream";
+import { finished } from "stream/promises";
 
 const proxyHosts: { [host: string]: string } = {
   "docs.cedalio.com": "https://docs.cedalio.com",
@@ -8,7 +10,7 @@ const proxyHosts: { [host: string]: string } = {
   "continue.usecyclone.dev": "https://continue.dev/docs",
 };
 
-const defaultProxyHost = "https://docs.cedalio.com";
+const defaultProxyHost = "https://continue.dev";
 
 function addCycloneScripts(respText: string): string {
   const doc = new JSDOM(respText);
@@ -81,12 +83,7 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
 
   headers.host = new URL(proxyDestUrl).host;
 
-  console.log(`${request.method} request, proxy to ${proxyDestUrl}`);
-  console.log("fetch", proxyDestUrl + request.url, {
-    method: request.method,
-    headers: headers,
-    followRedirect: true,
-  });
+  console.log(proxyDestUrl + request.url);
 
   const resp = await fetch(proxyDestUrl + request.url, {
     method: request.method,
@@ -96,10 +93,23 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
     throw err;
   });
 
-  if (resp.status === 200) {
+  if (
+    resp.status === 200 &&
+    resp.headers.get("content-type")?.includes("text/html")
+  ) {
     response.status(resp.status).send(addCycloneScripts(await resp.text()));
   } else {
-    response.status(resp.status).send(await resp.text());
+    response.status(resp.status);
+    resp.headers.forEach((val, key) => {
+      response.setHeader(key, val);
+    });
+    if (resp.body) {
+      console.log("has body");
+      // @ts-ignore
+      await finished(Readable.fromWeb(resp.body).pipe(response));
+    } else {
+      response.end();
+    }
   }
 
   return;
