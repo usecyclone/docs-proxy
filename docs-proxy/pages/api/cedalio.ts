@@ -1,6 +1,15 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { JSDOM } from "jsdom";
 
+const proxyHosts: { [host: string]: string } = {
+  "docs.cedalio.com": "https://docs.cedalio.com",
+  "cedalio.usecyclone.dev": "https://docs.cedalio.com",
+  "convex.usecyclone.dev": "https://docs.convex.dev",
+  "continue.usecyclone.dev": "https://continue.dev/docs",
+};
+
+const defaultProxyHost = "https://docs.cedalio.com";
+
 function addCycloneScripts(respText: string): string {
   const doc = new JSDOM(respText);
 
@@ -64,13 +73,27 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
   }
   delete headers["content-length"];
 
-  headers.host = "docs.cedalio.com";
+  let proxyDestUrl: string = defaultProxyHost;
+  const originalHost = headers.host as string | undefined;
+  if (originalHost && proxyHosts[originalHost]) {
+    proxyDestUrl = proxyHosts[originalHost];
+  }
 
-  console.log(`${request.method} request`);
+  headers.host = new URL(proxyDestUrl).host;
 
-  const resp = await fetch("https://docs.cedalio.com" + request.url, {
+  console.log(`${request.method} request, proxy to ${proxyDestUrl}`);
+  console.log("fetch", proxyDestUrl + request.url, {
     method: request.method,
     headers: headers,
+    followRedirect: true,
+  });
+
+  const resp = await fetch(proxyDestUrl + request.url, {
+    method: request.method,
+    headers: headers,
+  }).catch((err) => {
+    console.log(err);
+    throw err;
   });
 
   if (resp.status === 200) {
