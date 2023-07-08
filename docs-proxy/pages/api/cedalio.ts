@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from "next";
 import { JSDOM } from "jsdom";
-import { Readable } from "stream";
-import { finished } from "stream/promises";
+import StreamPromises from "stream/promises";
+import axios from "axios";
 
 const proxyHosts: { [host: string]: string } = {
   "docs.cedalio.com": "https://docs.cedalio.com",
@@ -11,6 +11,17 @@ const proxyHosts: { [host: string]: string } = {
 };
 
 const defaultProxyHost = "https://continue.dev";
+
+async function streamToString(stream: any) {
+  // lets have a ReadableStream as a stream variable
+  const chunks = [];
+
+  for await (const chunk of stream) {
+    chunks.push(Buffer.from(chunk));
+  }
+
+  return Buffer.concat(chunks).toString("utf-8");
+}
 
 function addCycloneScripts(respText: string): string {
   const doc = new JSDOM(respText);
@@ -85,31 +96,38 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
 
   console.log(proxyDestUrl + request.url);
 
-  const resp = await fetch(proxyDestUrl + request.url, {
-    method: request.method,
-    headers: headers,
-  }).catch((err) => {
-    console.log(err);
-    throw err;
-  });
+  const resp = await axios
+    .request({
+      url: proxyDestUrl + request.url,
+      method: request.method,
+      responseType: "stream",
+      headers: headers,
+    })
+    .catch((err) => {
+      return err.response;
+    });
+
+  response.status(resp.status);
+  for (const headerName in resp.headers) {
+    if (
+      resp.headers.hasOwnProperty(headerName) &&
+      headerName.toLowerCase() !== "content-length"
+    ) {
+      const headerValue = resp.headers[headerName];
+      response.setHeader(headerName, headerValue);
+    }
+  }
 
   if (
     resp.status === 200 &&
-    resp.headers.get("content-type")?.includes("text/html")
+    (resp.headers["Content-Type"] as string | null)?.includes("text/html")
   ) {
-    response.status(resp.status).send(addCycloneScripts(await resp.text()));
+    response.send(addCycloneScripts(await streamToString(resp.data)));
   } else {
-    response.status(resp.status);
-    resp.headers.forEach((val, key) => {
-      response.setHeader(key, val);
+    await StreamPromises.pipeline(resp.data, response).catch((err) => {
+      console.log(err);
+      throw err;
     });
-    if (resp.body) {
-      console.log("has body");
-      // @ts-ignore
-      await finished(Readable.fromWeb(resp.body).pipe(response));
-    } else {
-      response.end();
-    }
   }
 
   return;
