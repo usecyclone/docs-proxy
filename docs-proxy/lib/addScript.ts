@@ -1,6 +1,26 @@
 import { JSDOM } from "jsdom";
+import { get } from "@vercel/edge-config";
 
-export function addCycloneScripts(respText: string): string {
+export async function addCycloneScripts(
+  respText: string,
+  originalHost: string | undefined
+): Promise<string> {
+  let edgeIframeStringMap: { [host: string]: string } = {};
+  let edgeProjectMap: { [host: string]: string } = {};
+  try {
+    edgeIframeStringMap = (await get("iframeUrlFormatString")) || {};
+    edgeProjectMap = (await get("project")) || {};
+  } catch (err) {
+    console.log(err);
+  }
+
+  const project: string =
+    originalHost === undefined
+      ? "cedalio"
+      : edgeProjectMap[originalHost] || "cedalio";
+  const iframeUrl: string | undefined =
+    originalHost === undefined ? undefined : edgeIframeStringMap[originalHost];
+
   const doc = new JSDOM(respText);
 
   const head = doc.window.document.head;
@@ -13,9 +33,14 @@ export function addCycloneScripts(respText: string): string {
 
   // call cyclone_load_ide
   const ideScript = doc.window.document.createElement("script");
-  const ideScriptText = doc.window.document.createTextNode(
-    'window.onload=function(){window.cyclone_load_ide("cedalio")};'
-  );
+  const ideScriptText =
+    iframeUrl === undefined
+      ? doc.window.document.createTextNode(
+          `window.onload=function(){window.cyclone_load_ide("${project}")};`
+        )
+      : doc.window.document.createTextNode(
+          `window.onload=function(){window.cyclone_load_ide("${project}", "${iframeUrl}")};`
+        );
   ideScript.appendChild(ideScriptText);
   head.appendChild(ideScript);
 

@@ -83,7 +83,9 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
     // response.send will set the content-length header
     // that conflicts with the transfer-encoding one
     response.removeHeader("transfer-encoding");
-    response.send(addCycloneScripts(await streamToString(resp.data)));
+    response.send(
+      await addCycloneScripts(await streamToString(resp.data), originalHost)
+    );
   } else {
     await StreamPromises.pipeline(resp.data, response).catch((err) => {
       console.log(err);
