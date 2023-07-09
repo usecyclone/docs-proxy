@@ -21,6 +21,8 @@ export async function addCycloneScripts(
   const iframeUrl: string | undefined =
     originalHost === undefined ? undefined : edgeIframeStringMap[originalHost];
 
+  console.log(originalHost, project, iframeUrl);
+
   const doc = new JSDOM(respText);
 
   const head = doc.window.document.head;
