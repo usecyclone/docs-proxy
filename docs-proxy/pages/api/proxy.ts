@@ -45,9 +45,12 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
   delete headers["content-length"];
 
   let proxyDestUrl: string = defaultProxyHost;
+  let unknownHost = false; // host not found in vercel config
   const originalHost = headers.host as string | undefined;
   if (originalHost && edgeProxySettings[originalHost]) {
     proxyDestUrl = edgeProxySettings[originalHost];
+  } else {
+    unknownHost = true;
   }
 
   headers.host = new URL(proxyDestUrl).host;
@@ -74,6 +77,10 @@ async function handler(request: NextApiRequest, response: NextApiResponse) {
       const headerValue = resp.headers[headerName];
       response.setHeader(headerName, headerValue);
     }
+  }
+
+  if (unknownHost) {
+    response.setHeader("cyclone-unknown-host", "true");
   }
 
   if (
