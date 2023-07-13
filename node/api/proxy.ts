@@ -61,17 +61,34 @@ async function handler(request: VercelRequest, response: VercelResponse) {
   const reqUrl = new URL(proxyDestUrl + request.url);
   reqUrl.searchParams.delete("slug");
 
-  const resp = await axios
-    .request({
-      url: reqUrl.toString(),
-      method: request.method,
-      responseType: "stream",
-      headers: headers,
-      maxRedirects: 0,
-    })
-    .catch((err) => {
-      return err.response;
-    });
+  let resp;
+  if (request.body) {
+    console.log("has body");
+    resp = await axios
+      .request({
+        url: reqUrl.toString(),
+        method: request.method,
+        responseType: "stream",
+        headers: headers,
+        maxRedirects: 0,
+        data: request.body,
+      })
+      .catch((err) => {
+        return err.response;
+      });
+  } else {
+    resp = await axios
+      .request({
+        url: reqUrl.toString(),
+        method: request.method,
+        responseType: "stream",
+        headers: headers,
+        maxRedirects: 0,
+      })
+      .catch((err) => {
+        return err.response;
+      });
+  }
 
   response.status(resp.status);
   for (const headerName in resp.headers) {
