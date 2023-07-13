@@ -58,9 +58,12 @@ async function handler(request: VercelRequest, response: VercelResponse) {
 
   headers.host = new URL(proxyDestUrl).host;
 
+  const reqUrl = new URL(proxyDestUrl + request.url);
+  reqUrl.searchParams.delete("slug");
+
   const resp = await axios
     .request({
-      url: proxyDestUrl + request.url,
+      url: reqUrl.toString(),
       method: request.method,
       responseType: "stream",
       headers: headers,
@@ -87,7 +90,7 @@ async function handler(request: VercelRequest, response: VercelResponse) {
     response.setHeader("cyclone-unknown-host", "true");
   }
 
-  console.log(resp.status, proxyDestUrl + request.url);
+  console.log(resp.status, reqUrl.toString());
 
   if (
     resp.status === 200 &&
