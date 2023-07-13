@@ -87,6 +87,8 @@ async function handler(request: VercelRequest, response: VercelResponse) {
     response.setHeader("cyclone-unknown-host", "true");
   }
 
+  console.log(resp.status, proxyDestUrl + request.url);
+
   if (
     resp.status === 200 &&
     (resp.headers["content-type"] as string | null)?.includes("text/html")

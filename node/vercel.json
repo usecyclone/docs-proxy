@@ -7,6 +7,10 @@
         {
             "source": "/:slug*",
             "destination": "/api/proxy"
+        },
+        {
+            "source": "/:slug*/",
+            "destination": "/api/proxy"
         }
     ]
 }
